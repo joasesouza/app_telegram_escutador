@@ -1,0 +1,80 @@
+============================================================
+⏰ Data/Hora: 2026-09-22 15:42:54
+📌 Origem: Joas (ID: 990473162)
+💬 Texto Bruto:
+XAUUSD SELL 4362
+
+TP. 4359
+TP. 4356
+TP. 4353
+TP. 4350
+TP. 4347
+TP. 4344
+TP. 4340 
+
+SL. 4375
+
+✅ Sinal Formatado Extraído:
+PAR=XAUUSD
+TIPO=SELL
+PRECO=4362
+SL=4375
+TP1=4359
+TP2=4356
+TP3=4353
+TP4=4350
+TP5=4347
+TP6=4344
+TP7=4340
+============================================================
+============================================================
+⏰ Data/Hora: 2026-09-22 15:45:08
+📌 Origem: TAYRONE FOREX [OFICIAL] (ID: -1002624836763)
+💬 Texto Bruto:
+SMC Trading Br acho que é esse que ela falou
+
+ℹ️ NENHUM SINAL IDENTIFICADO NESTA MENSAGEM
+============================================================
+============================================================
+⏰ Data/Hora: 2026-09-22 15:46:35
+📌 Origem: TAYRONE FOREX [OFICIAL] (ID: -1002624836763)
+💬 Texto Bruto:
+Show irmão muito obrigado
+
+ℹ️ NENHUM SINAL IDENTIFICADO NESTA MENSAGEM
+============================================================
+============================================================
+⏰ Data/Hora: 2026-09-22 15:48:28
+📌 Origem: CONSYSTE VIP (SEM GALE) (ID: -1001490342949)
+💬 Texto Bruto:
+ATENTOS GBPJPY
+
+ℹ️ NENHUM SINAL IDENTIFICADO NESTA MENSAGEM
+============================================================
+============================================================
+⏰ Data/Hora: 2026-09-22 15:49:10
+📌 Origem: CONSYSTE VIP (SEM GALE) (ID: -1001490342949)
+💬 Texto Bruto:
+💰MOEDA: GBPJPY
+
+⏰ Horário: 15:50
+
+🚦Sinal: PUT/VENDA
+
+- VELAS 5 MINUTOS -
+
+🚫SEM MARTINGALE🚫
+
+
+🏳️CONSYSTE TRADERS
+
+ℹ️ NENHUM SINAL IDENTIFICADO NESTA MENSAGEM
+============================================================
+============================================================
+⏰ Data/Hora: 2026-09-22 15:49:10
+📌 Origem: CONSYSTE VIP (SEM GALE) (ID: -1001490342949)
+💬 Texto Bruto:
+ATENTOS EURJPY
+
+ℹ️ NENHUM SINAL IDENTIFICADO NESTA MENSAGEM
+============================================================
