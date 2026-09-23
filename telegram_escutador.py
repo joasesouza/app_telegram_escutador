@@ -47,7 +47,11 @@ def formatar_numero(val: float) -> str:
 
 
 def extrair_e_formatar_sinal(texto: str) -> str:
-    """Extrai os dados e formata em Chave=Valor para leitura direta no MQL5."""
+    """Extrai os dados e formata em Chave=Valor para leitura direta no MQL5.
+    Retorna None se PREÇO, SL ou TP1 forem vazios ou iguais a zero."""
+    if not texto:
+        return None
+
     texto_upper = texto.upper()
 
     # 1. Ação (BUY ou SELL)
@@ -65,48 +69,71 @@ def extrair_e_formatar_sinal(texto: str) -> str:
     entrada_match = re.search(
         r"(?:BUY|SELL|ENTRADA|AT)[:\s]*([0-9]+\.?[0-9]*)", texto_upper
     )
-    preco_entrada = entrada_match.group(1) if entrada_match else "0"
+    if not entrada_match:
+        return None
+    preco_str = entrada_match.group(1)
 
     # 4. Stop Loss (SL)
     sl_match = re.search(
         r"(?:SL|STOP LOSS)[:\s\.]*([0-9]+\.?[0-9]*)", texto_upper
     )
-    sl = sl_match.group(1) if sl_match else "0"
+    if not sl_match:
+        return None
+    sl_str = sl_match.group(1)
 
-    # 5. Cálculo do TP1 (mesmo tamanho do SL) e Trailing Stop (metade do SL)
+    # 5. Validação numérica de PREÇO e SL
     try:
-        preco_val = float(preco_entrada)
-        sl_val = float(sl)
+        preco_val = float(preco_str)
+        sl_val = float(sl_str)
     except (ValueError, TypeError):
-        preco_val = 0.0
-        sl_val = 0.0
+        return None
 
-    if preco_val > 0 and sl_val > 0:
-        distancia_sl = abs(preco_val - sl_val)
-        if acao == "BUY":
-            tp1_val = preco_val + distancia_sl
-        else:  # SELL
-            tp1_val = preco_val - distancia_sl
-        trailing_val = distancia_sl / 2.0
+    # PREÇO e SL não podem ser zero ou negativos
+    if preco_val <= 0 or sl_val <= 0:
+        return None
 
-        tp1 = formatar_numero(tp1_val)
-        trailingstop = formatar_numero(trailing_val)
+    distancia_sl = abs(preco_val - sl_val)
+    if distancia_sl <= 0:
+        return None
+
+    # 6. Cálculo do TP1 (mesmo tamanho do SL) e Trailing Stop (metade do SL)
+    if acao == "BUY":
+        tp1_val = preco_val + distancia_sl
+    elif acao == "SELL":
+        tp1_val = preco_val - distancia_sl
     else:
-        # Fallback caso não seja possível calcular pelo preço/SL
-        tps = re.findall(
-            r"(?:TP|TP\d+|TAKE PROFIT)[:\s\.]*([0-9]+\.?[0-9]*)", texto_upper
-        )
-        tp1 = tps[0] if tps else "0"
-        trailingstop = "0"
+        return None
+
+    # TP1 não pode ser zero ou negativo
+    if tp1_val <= 0:
+        return None
+
+    trailing_val = distancia_sl / 2.0
+
+    preco_formatado = formatar_numero(preco_val)
+    sl_formatado = formatar_numero(sl_val)
+    tp1_formatado = formatar_numero(tp1_val)
+    trailing_formatado = formatar_numero(trailing_val)
+
+    # Garantir que nenhum campo essencial seja vazio ou '0'
+    if (
+        not preco_formatado
+        or preco_formatado == "0"
+        or not sl_formatado
+        or sl_formatado == "0"
+        or not tp1_formatado
+        or tp1_formatado == "0"
+    ):
+        return None
 
     # Montagem do bloco Chave=Valor para o MT5 (apenas TP1 e TRAILINGSTOP, descartando demais TPs)
     linhas = [
         f"PAR={par}",
         f"TIPO={acao}",
-        f"PRECO={preco_entrada}",
-        f"SL={sl}",
-        f"TP1={tp1}",
-        f"TRAILINGSTOP={trailingstop}",
+        f"PRECO={preco_formatado}",
+        f"SL={sl_formatado}",
+        f"TP1={tp1_formatado}",
+        f"TRAILINGSTOP={trailing_formatado}",
     ]
 
     return "\n".join(linhas)
