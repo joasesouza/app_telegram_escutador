@@ -21,9 +21,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Pasta Comum do MetaTrader 5 (FILE_COMMON)
 # Esta pasta é lida pelo EA com a flag FILE_COMMON (InpUsarCommon=true)
 PASTA_COMUM_MT5 = os.path.expandvars(
-    r"%AppData%\MetaQuotes\Terminal\Common\Files"
+    # r"%AppData%\MetaQuotes\Terminal\Common\Files"
     # r"C:\Users\Joas Souza\AppData\Roaming\MetaQuotes\Terminal\7BBBFA1A523B390AFF327BAAA5DD03D7\MQL5\Files"  # Fotmarkets (sem FILE_COMMON)
-    # r"C:\Users\Joas Souza\AppData\Roaming\MetaQuotes\Terminal\81A933A9AFC5DE3C23B15CAB19C63850\MQL5\Files"  # FTMO (sem FILE_COMMON)
+    # FTMO (sem FILE_COMMON)
+    r"C:\Users\Joas Souza\AppData\Roaming\MetaQuotes\Terminal\81A933A9AFC5DE3C23B15CAB19C63850\MQL5\Files"
     # r"C:\Desenv\app_telegram_escutador"  # apenas para testes locais
 )
 
@@ -36,6 +37,13 @@ NOME_ARQUIVO_LOG = os.path.join(
 NOME_ARQUIVO_MT5 = os.path.join(PASTA_COMUM_MT5, "sinal_mt5.txt")
 
 client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
+
+
+def formatar_numero(val: float) -> str:
+    """Formata número removendo zeros decimais desnecessários."""
+    if val.is_integer():
+        return str(int(val))
+    return f"{val:.5f}".rstrip("0").rstrip(".")
 
 
 def extrair_e_formatar_sinal(texto: str) -> str:
@@ -51,7 +59,7 @@ def extrair_e_formatar_sinal(texto: str) -> str:
 
     # 2. Par de Moedas
     par_match = re.search(r"\b([A-Z]{6}|XAUUSD|BTCUSD)\b", texto_upper)
-    par = par_match.group(1) if par_match else "GOLD"
+    par = par_match.group(1) if par_match else "XAUUSD"
 
     # 3. Preço de Entrada
     entrada_match = re.search(
@@ -59,24 +67,47 @@ def extrair_e_formatar_sinal(texto: str) -> str:
     )
     preco_entrada = entrada_match.group(1) if entrada_match else "0"
 
-    # 4. Take Profits (TPs)
-    tps = re.findall(
-        r"(?:TP|TP\d+|TAKE PROFIT)[:\s\.]*([0-9]+\.?[0-9]*)", texto_upper
-    )
-
-    # 5. Stop Loss (SL)
+    # 4. Stop Loss (SL)
     sl_match = re.search(
         r"(?:SL|STOP LOSS)[:\s\.]*([0-9]+\.?[0-9]*)", texto_upper
     )
     sl = sl_match.group(1) if sl_match else "0"
 
-    # Montagem do bloco Chave=Valor para o MT5
-    linhas = [f"PAR={par}", f"TIPO={acao}",
-              f"PRECO={preco_entrada}", f"SL={sl}"]
+    # 5. Cálculo do TP1 (mesmo tamanho do SL) e Trailing Stop (metade do SL)
+    try:
+        preco_val = float(preco_entrada)
+        sl_val = float(sl)
+    except (ValueError, TypeError):
+        preco_val = 0.0
+        sl_val = 0.0
 
-    if tps:
-        for idx, tp in enumerate(tps, 1):
-            linhas.append(f"TP{idx}={tp}")
+    if preco_val > 0 and sl_val > 0:
+        distancia_sl = abs(preco_val - sl_val)
+        if acao == "BUY":
+            tp1_val = preco_val + distancia_sl
+        else:  # SELL
+            tp1_val = preco_val - distancia_sl
+        trailing_val = distancia_sl / 2.0
+
+        tp1 = formatar_numero(tp1_val)
+        trailingstop = formatar_numero(trailing_val)
+    else:
+        # Fallback caso não seja possível calcular pelo preço/SL
+        tps = re.findall(
+            r"(?:TP|TP\d+|TAKE PROFIT)[:\s\.]*([0-9]+\.?[0-9]*)", texto_upper
+        )
+        tp1 = tps[0] if tps else "0"
+        trailingstop = "0"
+
+    # Montagem do bloco Chave=Valor para o MT5 (apenas TP1 e TRAILINGSTOP, descartando demais TPs)
+    linhas = [
+        f"PAR={par}",
+        f"TIPO={acao}",
+        f"PRECO={preco_entrada}",
+        f"SL={sl}",
+        f"TP1={tp1}",
+        f"TRAILINGSTOP={trailingstop}",
+    ]
 
     return "\n".join(linhas)
 
